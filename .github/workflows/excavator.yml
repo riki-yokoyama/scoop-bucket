@@ -1,0 +1,37 @@
+name: Excavator
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+jobs:
+  excavate:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scoop をインストール
+        run: |
+          iex "& {$(irm get.scoop.sh)} -RunAsAdmin"
+          echo "$env:USERPROFILE\scoop\shims" | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
+
+      - name: マニフェストを更新
+        run: |
+          & "$env:USERPROFILE\scoop\apps\scoop\current\bin\checkver.ps1" -Dir bucket -Update
+
+      - name: 変更をコミット・プッシュ
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add bucket/
+          $changes = git diff --cached --name-only
+          if ($changes) {
+            $updated = ($changes | ForEach-Object { [System.IO.Path]::GetFileNameWithoutExtension($_) }) -join ", "
+            git commit -m "$updated を最新バージョンに更新"
+            git push
+          } else {
+            Write-Host "更新なし"
+          }
