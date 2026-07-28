@@ -16,6 +16,7 @@
             "hash": "0522dd4801e67bed63be3f74e31392148d6a6bc52fb2fe5d98c0e42fa93156fb"
         }
     },
+    "pre_install": "if (!(Test-Path \"$dir\\RLogin.ini\")) { New-Item -ItemType File \"$dir\\RLogin.ini\" | Out-Null }",
     "bin": "RLogin.exe",
     "shortcuts": [
         [
